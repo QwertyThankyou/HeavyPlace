@@ -1,6 +1,7 @@
 ###
 # Unity folders and files
 ###
+.idea/
 [Aa]ssets/AssetStoreTools*
 [Bb]uild/
 [Ll]ibrary/
