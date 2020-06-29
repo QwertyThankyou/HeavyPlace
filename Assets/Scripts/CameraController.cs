@@ -82,10 +82,10 @@ public class CameraController : MonoBehaviour
 
     private void CameraSet()                    // Присваиваем переменным заранее выбранное положение в пространстве (по углам комнаты) 
     {
-        _angle1T = new Vector3(5f, 6f, -6f);
+        _angle1T = new Vector3(6f, 6f, -5f);
         _angle1R = new Vector3(30f, -45f, 0f);
 
-        _angle2T = new Vector3(-5f, 6f, -6f);
+        _angle2T = new Vector3(-6f, 6f, -5f);
         _angle2R = new Vector3(30f, 45f, 0f);
 
         _angle3T = new Vector3(-5f, 6f, 6f);
