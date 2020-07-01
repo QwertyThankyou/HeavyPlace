@@ -3201,12 +3201,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91a896bb80c3aeb43b64ce6da94b71fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speedCam: 3
-  speedWall: 7
-  wallOne: {fileID: 866828998}
-  wallTwo: {fileID: 695567782}
-  wallThree: {fileID: 1969391218}
-  wallFour: {fileID: 1707337652}
+  speedCam: 4
+  speedWall: 8
   room: 1
   countRoom: 3
 --- !u!4 &983266036 stripped

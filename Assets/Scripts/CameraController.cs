@@ -10,13 +10,15 @@ public class CameraController : MonoBehaviour
     public float speedCam = 1f;
     [Tooltip("Скорость стен")]
     public float speedWall = 1f;
-
-    [Header("Стены")]
-    public GameObject wallOne;         // Стены
-    public GameObject wallTwo;
-    public GameObject wallThree;
-    public GameObject wallFour;
-
+    
+    [Header("Номер стартовой комнаты")]
+    public int room;                   // Номер текущей комнаты
+    [Header("Колличество комнат на сцене")]
+    public int countRoom;              // Колличество комнат на сцене
+    
+    private List<GameObject> _walls;   // Лист со стенами
+    private List<GameObject> _rooms;   // Лист с комнатами
+    
     private Transform _cam;            // Камера
     private float _startPos;           // Позиция начала касания
     private float _endPos;             // Позиция конца касания
@@ -26,10 +28,6 @@ public class CameraController : MonoBehaviour
     
     private bool _swapLim = true;      // Можно ли делать свайп
     private float _swapLimiter = 0f;   // Ограничивает "время" для следующего свайпа
-
-    public int room;                   // Номер текущей комнаты
-    public int countRoom;              // Колличество комнат на сцене
-    private List<GameObject> _rooms;   // Лист с комнатами
     
     private Vector3 _angle1T;          // T - transform у камеры
     private Vector3 _angle1R;          // R- rotation у камеры
@@ -47,19 +45,15 @@ public class CameraController : MonoBehaviour
         _cam = GetComponent<Transform>();
         CameraSet();
         
+        _walls = new List<GameObject>();
         _rooms = new List<GameObject>();
         
         _angle = 3;               // Поставил троечки, чтобы не менять знаки в CameraSet
         _bufAngle = 3;
-
-        //room = 1;
-        //countRoom = 3;
         
         ListFill();
         
         SwitchRoom(room);
-        
-        //GameObject.Find("Wall1").transform.Find("Room2").gameObject.SetActive(false);   // Отключение стен комнаты
     }
     
     void Update()
@@ -68,16 +62,12 @@ public class CameraController : MonoBehaviour
         StartCoroutine(Changer(SwapP(), SwapR(), SwapW1(), SwapW2()));
         StartCoroutine(WallBack(SwapWB()));
 
-        if (_swapLim == false) _swapLimiter += 0.15f;    // Можно изменять 0.2f и 10f, можно подобрать идеальные значения, пока так
+        if (_swapLim == false) _swapLimiter += 0.2f;    // Можно изменять 0.2f и 10f, можно подобрать идеальные значения, пока так
         if (_swapLimiter > 10f)
         {
             _swapLim = true;
             _swapLimiter = 0f;
         }
-        
-        if (Input.GetKeyUp(KeyCode.Alpha1)) SwitchRoom(1);
-        if (Input.GetKeyUp(KeyCode.Alpha2)) SwitchRoom(2);
-        if (Input.GetKeyUp(KeyCode.Alpha3)) SwitchRoom(3);
     }
 
     public void Button1()
@@ -95,15 +85,20 @@ public class CameraController : MonoBehaviour
         SwitchRoom(3);
     }
 
-    private void ListFill()
+    private void ListFill()                     // Заполнение листов  
     {
         for (int i = 1; i <= countRoom; i++)
         {
             _rooms.Add(GameObject.Find("Room" + i));
         }
+
+        for (int i = 1; i <= 4; i++)
+        {
+            _walls.Add(GameObject.Find("Wall" + i));
+        }
     }
     
-    private void SwitchRoom(int room)
+    private void SwitchRoom(int room)           // Смена активной комнаты
     {
         foreach (GameObject i in _rooms)
         {
@@ -111,19 +106,13 @@ public class CameraController : MonoBehaviour
             else i.SetActive(true);
         }
 
-        for (int i = 1; i <= countRoom; i++)
+        foreach (GameObject wall in _walls)
         {
-            if (i != room) wallOne.transform.Find("room" + i).gameObject.SetActive(false);
-            else wallOne.transform.Find("room" + i).gameObject.SetActive(true);
-            
-            if (i != room) wallTwo.transform.Find("room" + i).gameObject.SetActive(false);
-            else wallTwo.transform.Find("room" + i).gameObject.SetActive(true);
-            
-            if (i != room) wallThree.transform.Find("room" + i).gameObject.SetActive(false);
-            else wallThree.transform.Find("room" + i).gameObject.SetActive(true);
-            
-            if (i != room) wallFour.transform.Find("room" + i).gameObject.SetActive(false);
-            else wallFour.transform.Find("room" + i).gameObject.SetActive(true);
+            for (int i = 1; i <= countRoom; i++)
+            {
+               if (i != room) wall.transform.Find("room" + i).gameObject.SetActive(false);
+               else wall.transform.Find("room" + i).gameObject.SetActive(true); 
+            }
         }
     }
     
@@ -203,15 +192,15 @@ public class CameraController : MonoBehaviour
         switch (_angle)                                                      
         { 
             case 1: 
-                return wallFour.transform;
+                return _walls[3].transform;
             case 2: 
-                return wallOne.transform;
+                return _walls[0].transform;
             case 3: 
-                return wallTwo.transform;
+                return _walls[1].transform;
             case 4: 
-                return wallThree.transform;
+                return _walls[2].transform;
             default:
-                return wallFour.transform;
+                return _walls[2].transform;
         }
     }
     
@@ -220,15 +209,15 @@ public class CameraController : MonoBehaviour
         switch (_angle)                                                      
         { 
             case 1: 
-                return wallOne.transform;
+                return _walls[0].transform;
             case 2: 
-                return wallTwo.transform;
+                return _walls[1].transform;
             case 3:
-                return wallThree.transform;
+                return _walls[2].transform;
             case 4: 
-                return wallFour.transform;
+                return _walls[3].transform;
             default:
-                return wallOne.transform;
+                return _walls[0].transform;
         }
     }
     
@@ -237,19 +226,19 @@ public class CameraController : MonoBehaviour
         switch (_angle)                                                      
         { 
             case 1:
-                if (_bufAngle == 4) return wallThree.transform;
-                else return wallTwo.transform;
+                if (_bufAngle == 4) return _walls[2].transform;
+                else return _walls[1].transform;
             case 2:
-                if (_bufAngle == 1) return wallFour.transform;
-                else return wallThree.transform;
+                if (_bufAngle == 1) return _walls[3].transform;
+                else return _walls[2].transform;
             case 3:
-                if (_bufAngle == 2) return wallOne.transform;
-                else return wallFour.transform;
+                if (_bufAngle == 2) return _walls[0].transform;
+                else return _walls[3].transform;
             case 4:
-                if (_bufAngle == 3) return wallTwo.transform;
-                else return wallOne.transform;
+                if (_bufAngle == 3) return _walls[1].transform;
+                else return _walls[0].transform;
             default:
-                return wallThree.transform;
+                return _walls[2].transform;
         }
     }
 
