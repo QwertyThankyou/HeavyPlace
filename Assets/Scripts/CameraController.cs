@@ -5,10 +5,7 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    [Header("Скорость камеры и стен")]
-    [Tooltip("Скорость камеры")]
-    public float speedCam = 1f;
-    [Tooltip("Скорость стен")]
+    [Header("Скорость стен")]
     public float speedWall = 1f;
     
     [Header("Номер стартовой комнаты")]
@@ -19,7 +16,8 @@ public class CameraController : MonoBehaviour
     private List<GameObject> _walls;   // Лист со стенами
     private List<GameObject> _rooms;   // Лист с комнатами
     
-    private Transform _cam;            // Камера
+    private CameraOrbit _cam;          // Камера
+    
     private float _startPos;           // Позиция начала касания
     private float _endPos;             // Позиция конца касания
 
@@ -29,21 +27,9 @@ public class CameraController : MonoBehaviour
     private bool _swapLim = true;      // Можно ли делать свайп
     private float _swapLimiter = 0f;   // Ограничивает "время" для следующего свайпа
     
-    private Vector3 _angle1T;          // T - transform у камеры
-    private Vector3 _angle1R;          // R- rotation у камеры
-    private Vector3 _angle2T;
-    private Vector3 _angle2R;
-    private Vector3 _angle3T;
-    private Vector3 _angle3R;
-    private Vector3 _angle4T;
-    private Vector3 _angle4R;
-
-    
-
     void Start()
     {
-        _cam = GetComponent<Transform>();
-        CameraSet();
+        _cam = GetComponent<CameraOrbit>();
         
         _walls = new List<GameObject>();
         _rooms = new List<GameObject>();
@@ -59,8 +45,7 @@ public class CameraController : MonoBehaviour
     void Update()
     {
         SwapA();
-        StartCoroutine(Changer(SwapP(), SwapR(), SwapW1(), SwapW2()));
-        StartCoroutine(WallBack(SwapWB()));
+        StartCoroutine(Changer( SwapW1(), SwapW2(), SwapWB()));
 
         if (_swapLim == false) _swapLimiter += 0.2f;    // Можно изменять 0.2f и 10f, можно подобрать идеальные значения, пока так
         if (_swapLimiter > 10f)
@@ -98,11 +83,11 @@ public class CameraController : MonoBehaviour
         }
     }
     
-    private void SwitchRoom(int room)           // Смена активной комнаты
+    private void SwitchRoom(int roomSwitch)           // Смена активной комнаты
     {
         foreach (GameObject i in _rooms)
         {
-            if (i.name != "Room" + room) i.SetActive(false);
+            if (i.name != "Room" + roomSwitch) i.SetActive(false);
             else i.SetActive(true);
         }
 
@@ -110,25 +95,10 @@ public class CameraController : MonoBehaviour
         {
             for (int i = 1; i <= countRoom; i++)
             {
-               if (i != room) wall.transform.Find("room" + i).gameObject.SetActive(false);
+               if (i != roomSwitch) wall.transform.Find("room" + i).gameObject.SetActive(false);
                else wall.transform.Find("room" + i).gameObject.SetActive(true); 
             }
         }
-    }
-    
-    private void CameraSet()                    // Присваиваем переменным заранее выбранное положение в пространстве (по углам комнаты) 
-    {
-        _angle1T = new Vector3(6f, 6f, -5f);
-        _angle1R = new Vector3(30f, -45f, 0f);
-
-        _angle2T = new Vector3(-6f, 6f, -5f);
-        _angle2R = new Vector3(30f, 45f, 0f);
-
-        _angle3T = new Vector3(-5f, 6f, 6f);
-        _angle3R = new Vector3(30f, 135f, 0f);
-
-        _angle4T = new Vector3(5f, 6f, 6f);
-        _angle4R = new Vector3(30f, -135f, 0f);
     }
 
     private void SwapA()                                                     // Смена angle при свапе
@@ -144,46 +114,20 @@ public class CameraController : MonoBehaviour
             {
                 _bufAngle = _angle;
 
-                if (_startPos < _endPos) 
+                if (_startPos < _endPos)
+                {
+                    _cam.MoveHorizontal(true);
                     if (_angle != 4) _angle++;
                     else _angle = 1;
-                else if (_angle != 1) _angle--;
-                     else _angle = 4;
+                }
+                    
+                else 
+                { 
+                    _cam.MoveHorizontal(false);
+                    if (_angle != 1) _angle--;
+                    else _angle = 4;
+                }
             }
-        }
-    }
-
-    private Vector3 SwapP()                                                 // Смена position
-    {
-        switch (_angle)                                                       
-        { 
-            case 1: 
-                return _angle1T;
-            case 2: 
-                return _angle2T;
-            case 3: 
-                return _angle3T;
-            case 4: 
-                return _angle4T;
-            default:
-                return _angle1T;
-        }
-    }
-    
-    private Vector3 SwapR()                                                 // Смена rotation
-    {
-        switch (_angle)                                                      
-        { 
-            case 1: 
-                return _angle1R;
-            case 2: 
-                return _angle2R;
-            case 3: 
-                return _angle3R;
-            case 4: 
-                return _angle4R;
-            default:
-                return _angle1R;
         }
     }
     
@@ -242,22 +186,18 @@ public class CameraController : MonoBehaviour
         }
     }
 
-    IEnumerator Changer(Vector3 position, Vector3 rotation, Transform wallOne, Transform wallTwo)       // Меняет position и rotation у камеры и поднимает стены
+    IEnumerator Changer(Transform wallOne, Transform wallTwo, Transform wallBack)       // Меняет position и rotation у камеры и поднимает стены
     {
-        _cam.position = new Vector3(
-            Mathf.Lerp(_cam.position.x, position.x, Time.deltaTime * speedCam),
-            _cam.position.y,
-            Mathf.Lerp(_cam.position.z, position.z, Time.deltaTime * speedCam));
-        _cam.rotation = Quaternion.Lerp(_cam.rotation, Quaternion.Euler(rotation), Time.deltaTime * speedCam);
-       
         wallOne.position = new Vector3(wallOne.position.x, Mathf.Lerp(wallOne.position.y, 15f, Time.deltaTime * speedWall), wallOne.position.z);
         wallTwo.position = new Vector3(wallTwo.position.x, Mathf.Lerp(wallTwo.position.y, 15f, Time.deltaTime * speedWall), wallTwo.position.z);
+        
+        wallBack.position = new Vector3(wallBack.position.x, Mathf.Lerp(wallBack.position.y, 2.629908f, Time.deltaTime * speedWall), wallBack.position.z);
         yield return null;
     }
 
-    IEnumerator WallBack(Transform wall)            // Возвращает стену на своё место
+    private void OnDisable()
     {
-        wall.position = new Vector3(wall.position.x, Mathf.Lerp(wall.position.y, 2.629908f, Time.deltaTime * speedWall), wall.position.z);
-        yield return null;
+        _walls.Clear();
+        _rooms.Clear();
     }
 }
